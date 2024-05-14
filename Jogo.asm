@@ -49,6 +49,27 @@ segment code
 		push	ax
 		call	line
 		
+; Desenhando a raquete
+		mov		ax, 270
+		push 	ax
+		mov		ax, 10
+		push	ax
+		mov		ax, 370
+		push 	ax
+		mov		ax, 10
+		push	ax
+		call	line
+		
+; Desenhando o circulo do jogo
+		mov		byte[cor],	branco_intenso
+		mov		ax,320
+		push		ax
+		mov		ax,30
+		push		ax
+		mov		ax,20
+		push		ax
+		call	full_circle
+		
 ; Carregando cx para fazer o loop e printar os quadrados (a cor é definida fora para ser incrementada dentro do loop)
 		mov		cx, 6
 		mov		byte[cor], azul
@@ -148,7 +169,6 @@ fazQuadrado2:
 		add		word[x2B], 105
 		add		word[x1B] , 105
 		loop 	fazQuadrado2
-		
 
 ; Finalizando o programa
 		mov    	ah,08h
