@@ -1,0 +1,119 @@
+     1                                  ; Teclado IBM com porta DIN (descontinuado mas o mecanismo de comunicação continua!)
+     2                                  ; https://www.xataka.com/perifericos/clac-cataclac-clac-el-legendario-teclado-ibm-model-f-vuelve-a-la-vida-por-360-dolares-puede-ser-tuyo
+     3                                  
+     4                                  ; Tecla 1 (Esc) gera código Make 1, Teclar 2 (1) código Make 2, Teclar 3 (2) código Make 3 ... ~~ 88 teclas
+     5                                  
+     6                                  ; Break (liverar a tecla) faz 80h + código Make da tecla, -> Por exemplo a tecla 2 -> Códimo Make = 3, e Código Break = 80h+3 = 83h
+     7                                  
+     8                                  ; Cada dado do teclado é transferido de forma serial do 8048. A trama é composta por 10 bits, sendo 2 de sincronização (74LS175) com o clock do porcessador PCLK 
+     9                                  ; e 8 bits do código Make ou Break da tecla, ou seja, 11XXXXXXXX, dois pusos de sincronização "11" e o código da tecla "XXXXXXXX"
+    10                                  
+    11                                  segment code
+    12                                  ..start:
+    13 00000000 B8[0000]                		MOV 	AX,data					; Inicializa o registrador de Segmento de Dados DS
+    14 00000003 8ED8                    		MOV 	DS,AX
+    15 00000005 B8[0000]                		MOV 	AX,stack				; Inicializa o registrador de Segmento de Pilha SS
+    16 00000008 8ED0                    		MOV 	SS,AX
+    17 0000000A BC[0001]                		MOV 	sp,stacktop				; Inicializa o apontador de Pilha SP
+    18                                  
+    19 0000000D FA                      		CLI								; Deshabilita INTerrupções por hardware - pin INTR NÃO atende INTerrupções externas	
+    20 0000000E 31C0                            XOR     AX, AX					; Limpa o registrador AX, é equivalente a fazer "MOV AX,0"
+    21 00000010 8EC0                            MOV     ES, AX					; Inicializa o registrador de Segmento Extra ES para acessar à região de vetores de INTerrupção (posição zero de memoria)
+    22 00000012 26A12400                        MOV     AX, [ES:INT9*4]			; Carrega em AX o valor do IP do vector de INTerrupção 9 
+    23 00000016 A3[0200]                        MOV     [offset_dos], AX    	; Salva na variável offset_dos o valor do IP do vector de INTerrupção 9
+    24 00000019 26A12600                        MOV     AX, [ES:INT9*4+2]   	; Carrega em AX o valor do CS do vector de INTerrupção 9
+    25 0000001D A3[0000]                        MOV     [cs_dos], AX			; Salva na variável cs_dos o valor do CS do vector de INTerrupção 9     
+    26 00000020 268C0E2600                      MOV     [ES:INT9*4+2], CS		; Atualiza o valor do CS do vector de INTerrupção 9 com o CS do programa atual 
+    27 00000025 26C7062400[9300]                MOV     WORD [ES:INT9*4],keyINT	; Atualiza o valor do IP do vector de INTerrupção 9 com o offset "keyINT" do programa atual
+    28 0000002C FB                              STI								; Habilita INTerrupções por hardware - pin INTR SIM atende INTerrupções externas
+    29                                                  
+    30                                  L1:
+    31 0000002D A1[0D00]                        MOV     AX,[p_i]				; loop - se não tem tecla pulsada, não faz nada! p_i só é atualizado (p_i = p_i + 1) na Rotina de Serviço de INTerrupção (ISR) "keyINT" 
+    32 00000030 3B06[0F00]                      CMP     AX,[p_t]
+    33 00000034 74F7                            JE      L1
+    34 00000036 FF06[0F00]                      INC     word[p_t]				; p_t - se atualiza (p_t = p_t + 1) só se p_i foi atualizado, ou seja, se teve tecla pulsada
+    35 0000003A 8126[0F00]0700                  AND     word[p_t],7				
+    36 00000040 8B1E[0F00]                      MOV     BX,[p_t]				; Carrega em BX o valor de p_t
+    37 00000044 31C0                            XOR     AX, AX
+    38 00000046 8A87[0500]                      MOV     AL, [BX+tecla]			; Carrega em AL o valor da variável tecla (variável atualizada durante a ISR) mais o offset BX, AL <- [BX+tecla]  
+    39 0000004A A2[0400]                        MOV     [tecla_u],al			; Transfere o valor de AL (no caso o valor da tecla - Código Make/Break) para variável "tecla_u"
+    40                                          
+    41 0000004D B310                    		MOV     BL, 16					; Como AL contem o valor do código Make da tecla pulsada ou código Break da tecla liverada carrega BL com 16
+    42 0000004F F6F3                            DIV     BL						; para dividir por 16 e representar em Hexa o valor do código Make/Break - "Lembrar que Cociente fical em AL e residuo em AH"
+    43 00000051 0430                            ADD     Al, 30h					; Acrecenta 0x30 a AL para converter em ascii, por exemplo se for Make = 1, o ascii de 1 é 0x31			
+    44 00000053 3C3A                            CMP     AL, 3Ah                 ; Se a tecla pulsada for differente de número, ou seja, se for uma letra o valor é superior a 0x3A. Ver tabela ascii
+    45                                  										; 
+    46 00000055 7202                            JB      continua				; Se for numero de 0 até 9, daria 0x30 até 0x39, então pula para "continua"
+    47 00000057 0407                            ADD     AL, 07h					; Se não for numero, acrescenta 7 para pular os carateres - ver tabela ascii
+    48                                  
+    49                                  continua:        
+    50 00000059 A2[1100]                        MOV     [teclasc], AL			; O cociente da divisão é transferido à variável "teclasc"
+    51 0000005C 80C430                          ADD     AH, 30h					; Repete o processo com o ressiduo: Acrescenta 0x30 para converter em ascii,
+    52 0000005F 80FC3A                          CMP     AH, 3Ah					; Verifica se é maior do que 0x39, ou seja, se é letra!
+    53 00000062 7203                            JB      continua1				; Se não, então é numero (0x30 até 0x39) e pula para "continua1"
+    54 00000064 80C407                          ADD     AH, 07h					; Se não for numero, então é letra e acrescenta 7 para pular os carateres - ver tabela ascii
+    55                                  
+    56                                  continua1:
+    57 00000067 8826[1200]                      MOV     [teclasc+1], AH			; O ressiduo da divisão é transferido à variável "teclasc+1"
+    58 0000006B BA[1100]                        MOV     DX,teclasc				; Carrega endereço de teclasc
+    59 0000006E B409                            MOV     AH, 9 					; Imprimir string DOS, ou seja, imprime o valor em ascii da tecla pulsada. Por exemplo, se for tecla #2 ('1') imprime 02 (Make) ou 82 (Break)
+    60 00000070 CD21                            INT     21h						; Chama INTerrupção por software para imprimir o valor!
+    61                                  		
+    62 00000072 803E[0400]81                    CMP     BYTE [tecla_u], 81h		; Se for pulsada a tecla ESC gera o código Break = 0x81, 
+    63 00000077 7403                            JE      L2						; Então pula para sair do programa!
+    64 00000079 E9B1FF                          JMP     L1						; Se não, pula para L1 e começa tudo de novo!
+    65                                  
+    66                                  L2:										; Ao sair do programa temos que restaurar o CS:IP da INTerrupção 9, que incialmente alteramos nas linhas 26 e 27
+    67 0000007C FA                              CLI								; Deshabilita INTerrupções por hardware - pin INTR NÃO atende INTerrupções externas
+    68 0000007D 31C0                            XOR     AX, AX					; Limpa o registrador AX, é equivalente a fazer "MOV AX,0"				
+    69 0000007F 8EC0                            MOV     ES, AX					; Inicializa o registrador de Segmento Extra ES para acessar à região de vetores de INTerrupção (posição zero de memoria)
+    70 00000081 A1[0000]                        MOV     AX, [cs_dos]			; Carrega em AX o valor do CS do vector de INTerrupção 9 que foi salvo na variável cs_dos -> linha 25
+    71 00000084 26A32600                        MOV     [ES:INT9*4+2], AX		; Atualiza o valor do CS do vector de INTerrupção 9 que foi salvo na variável cs_dos
+    72 00000088 A1[0200]                        MOV     AX, [offset_dos]		; Carrega em AX o valor do IP do vector de INTerrupção 9 que foi salvo na variável offset_dos -> linha 23
+    73 0000008B 26A32400                        MOV     [ES:INT9*4], AX 		; Atualiza o valor do IP do vector de INTerrupção 9 que foi salvo na variável offset_dos
+    74 0000008F B44C                            MOV     AH, 4Ch					; Carrega em AH o valor de 4Ch, parametro para INT 21h
+    75 00000091 CD21                            INT     21h						; Chama Interrupção 21h para retornar o controle ao sistema operacional -> sai de forma segura da execução do programa
+    76                                  
+    77                                  
+    78                                  keyINT:									; Este segmento de código só será executado se uma tecla for presionada, ou seja, se a INT 9h for acionada!
+    79 00000093 50                              PUSH    AX						; Salva contexto na pilha
+    80 00000094 53                              PUSH    BX
+    81 00000095 1E                              PUSH    DS
+    82 00000096 B8[0000]                        MOV     AX,data					; Carrega em AX o endereço de "data" -> Região do código onde encontra-se o segemeto de dados "Segment data" 			
+    83 00000099 8ED8                            MOV     DS,AX					; Atualiza registrador de segmento de dados DS, isso pode ser feito no inicio do programa!
+    84 0000009B E460                            IN      AL, kb_data				; Le a porta 60h, que é onde está o byte do Make/Break da tecla. Esse valor é fornecido pelo chip "8255 PPI"
+    85 0000009D FF06[0D00]                      INC     WORD [p_i]				; Incrementa p_i para indicar no loop principal que uma tecla foi acionada!
+    86 000000A1 8126[0D00]0700                  AND     WORD [p_i],7			
+    87 000000A7 8B1E[0D00]                      MOV     BX,[p_i]				; Carrega p_i em BX
+    88 000000AB 8887[0500]                      MOV     [BX+tecla],al			; Transfere o valor Make/Break da tecla armacenado em AL "linha 84" para o segmento de dados com offset DX, na variável "tecla"
+    89 000000AF E461                            IN      AL, kb_ctl				; Le porta 61h, pois o bit mais significativo "bit 7" 
+    90 000000B1 0C80                            OR      AL, 80h					; Faz operação lógica OR com o bit mais significativo do registrador AL (1XXXXXXX) -> Valor lido da porta 61h 
+    91 000000B3 E661                            OUT     kb_ctl, AL				; Seta o bit mais significativo da porta 61h
+    92 000000B5 247F                            AND     AL, 7Fh					; Restablece o valor do bit mais significativo do registrador AL (0XXXXXXX), alterado na linha 90 	
+    93 000000B7 E661                            OUT     kb_ctl, AL				; Reinicia o registrador de dislocamento 74LS322 e Livera a interrupção "CLR do flip-flop 7474". O 8255 - Programmable Peripheral Interface (PPI) fica pronto para recever um outro có
+    94 000000B9 B020                            MOV     AL, eoi					; Carrega o AL com a byte de End of Interruption, -> 20h por default
+    95 000000BB E620                            OUT     pictrl, AL				; Livera o PIC
+    96                                          
+    97 000000BD 1F                      		POP     DS						; Reestablece os registradores salvos na linha 79 
+    98 000000BE 5B                              POP     BX
+    99 000000BF 58                              POP     AX
+   100 000000C0 CF                              IRET							; Retorna da interrupção
+   101                                  
+   102                                  segment data
+   103                                          kb_data EQU 60h  				; PORTA DE LEITURA DE TECLADO
+   104                                          kb_ctl  EQU 61h  				; PORTA DE RESET PARA PEDIR NOVA INTERRUPCAO
+   105                                          pictrl  EQU 20h					; PORTA DO PIC DE TECLADO
+   106                                          eoi     EQU 20h					; Byte de final de interrupção PIC - resgistrador
+   107                                          INT9    EQU 9h					; Interrupção por hardware do teclado
+   108 00000000 0100                            cs_dos  DW  1					; Variável de 2 bytes para armacenar o CS da INT 9
+   109 00000002 0100                            offset_dos  DW 1				; Variável de 2 bytes para armacenar o IP da INT 9
+   110 00000004 00                              tecla_u db 0
+   111 00000005 <res 00000008>                  tecla   resb  8					; Variável de 8 bytes para armacenar a tecla presionada. Só precisa de 2 bytes!	 
+   112 0000000D 0000                            p_i     dw  0   				; Indice p/ Interrupcao (Incrementa na ISR quando pressiona/solta qualquer tecla)  
+   113 0000000F 0000                            p_t     dw  0   				; Indice p/ Interrupcao (Incrementa após retornar da ISR quando pressiona/solta qualquer tecla)    
+   114 00000011 00000D0A24                      teclasc DB  0,0,13,10,'$'		; Variável tipo char para printar o código Make/Break em hexadecimal
+   115                                  
+   116                                  segment stack stack						; Segmento da pilha -> SS
+   117 00000000 <res 00000100>              resb 256							; Reserva 256 bytes para a pilha
+   118                                  stacktop:								; Define ponteiro do topo da pilha -> SP
+   119                                  

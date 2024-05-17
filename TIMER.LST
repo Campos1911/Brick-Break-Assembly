@@ -1,0 +1,180 @@
+     1                                  ; Este programa tem por objetivo usar a interrupção por hardware de "tique", a qual é definida como Int 8
+     2                                  ; O sistema utiliza uma fonte de relogio de ~18.2 Hz, ou seja, a cada ~0.0549 segundos ou ~54.9 ms, o sistema é interrumpido
+     3                                  
+     4                                  segment code
+     5                                  ..start:
+     6 00000000 B8[0000]                		MOV 	AX,data						; Inicializa o registrador de Segmento de Dados DS
+     7 00000003 8ED8                    		MOV 	DS,AX
+     8 00000005 B8[0000]                		MOV 	AX,stack					; Inicializa o registrador de Segmento de Pilha SS
+     9 00000008 8ED0                    		MOV 	ss,AX
+    10 0000000A BC[0001]                		MOV 	sp,stacktop					; Inicializa o apontador de Pilha SP
+    11                                  	
+    12 0000000D FA                      		CLI								; Deshabilita INTerrupções por hardware - pin INTR NÃO atende INTerrupções externas	
+    13 0000000E 31C0                            XOR     AX, AX					; Limpa o registrador AX, é equivalente a fazer "MOV AX,0"
+    14 00000010 8EC0                            MOV     ES, AX					; Inicializa o registrador de Segmento Extra ES para acessar à região de vetores de INTerrupção (posição zero de memoria)
+    15 00000012 26A12400                        MOV     AX, [ES:INT9*4]			; Carrega em AX o valor do IP do vector de INTerrupção 9 
+    16 00000016 A3[0200]                        MOV     [offset_dos], AX    	; Salva na variável offset_dos o valor do IP do vector de INTerrupção 9
+    17 00000019 26A12600                        MOV     AX, [ES:INT9*4+2]   	; Carrega em AX o valor do CS do vector de INTerrupção 9
+    18 0000001D A3[0000]                        MOV     [cs_dos], AX			; Salva na variável cs_dos o valor do CS do vector de INTerrupção 9     
+    19 00000020 268C0E2600                      MOV     [ES:INT9*4+2], CS		; Atualiza o valor do CS do vector de INTerrupção 9 com o CS do programa atual 
+    20 00000025 26C7062400[3700]                MOV     WORD [ES:INT9*4],keyINT	; Atualiza o valor do IP do vector de INTerrupção 9 com o offset "keyINT" do programa atual
+    21 0000002C FB                              STI								; Habilita INTerrupções por hardware - pin INTR SIM atende INTerrupções externas
+    22 0000002D 8B17                    		MOV		DX, [BX]
+    23 0000002F B409                    		MOV 	AH, 9H
+    24 00000031 CD21                    		INT 	21h
+    25 00000033 B44C                    		MOV		AH, 4CH
+    26 00000035 CD21                    		INT 	21H
+    27                                  		
+    28                                  keyINT:
+    29 00000037 50                      		PUSH    AX						; Salva contexto na pilha
+    30 00000038 53                              PUSH    BX
+    31 00000039 1E                              PUSH    DS
+    32 0000003A B8[0000]                        MOV     AX,data					; Carrega em AX o endereço de "data" -> Região do código onde encontra-se o segemeto de dados "Segment data" 			
+    33 0000003D 8ED8                            MOV     DS,AX					; Atualiza registrador de segmento de dados DS, isso pode ser feito no inicio do programa!
+    34 0000003F E460                            IN      AL, kb_data				; Le a porta 60h, que é onde está o byte do Make/Break da tecla. Esse valor é fornecido pelo chip "8255 PPI"
+    35 00000041 8807                            MOV     [BX], AL					; Transfere o valor Make/Break da tecla armacenado em AL "linha 84" para o segmento de dados com offset DX, na variável "tecla"
+    36 00000043 E461                            IN      AL, kb_ctl				; Le porta 61h, pois o bit mais significativo "bit 7" 
+    37 00000045 0C80                            OR      AL, 80h					; Faz operação lógica OR com o bit mais significativo do registrador AL (1XXXXXXX) -> Valor lido da porta 61h 
+    38 00000047 E661                            OUT     kb_ctl, AL				; Seta o bit mais significativo da porta 61h
+    39 00000049 247F                            AND     AL, 7Fh					; Restablece o valor do bit mais significativo do registrador AL (0XXXXXXX), alterado na linha 90 	
+    40 0000004B E661                            OUT     kb_ctl, AL				; Reinicia o registrador de dislocamento 74LS322 e Livera a interrupção "CLR do flip-flop 7474". O 8255 - Programmable Peripheral Interface (PPI) fica pronto para recever um outro có
+    41 0000004D B020                            MOV     AL, eoi					; Carrega o AL com a byte de End of Interruption, -> 20h por default
+    42 0000004F E620                            OUT     pictrl, AL				; Livera o PIC
+    43 00000051 5A                      		POP DX
+    44 00000052 5B                      		POP BX
+    45 00000053 58                      		POP AX
+    46 00000054 CF                      		IRET
+    47                                  
+    48                                  	
+    49 00000055 FA                      		CLI									; Deshabilita INTerrupções por harDWare - pin INTR NÃO atende INTerrupções externas
+    50 00000056 31C0                    		XOR 	AX, AX						; Limpa o registrador AX, é equivALente a fazer "MOV AX,0"
+    51 00000058 8EC0                    		MOV 	ES, AX						; Inicializa o registrador de Segmento Extra ES para acessar à região de vetores de INTerrupção (posição zero de memoria)
+    52 0000005A 26A12000                		MOV     AX, [ES:INTr*4]				; Carrega em AX o vALor do IP do vector de INTerrupção 8
+    53 0000005E A3[0200]                		MOV     [offset_dos], AX    		; Salva na variável offset_dos o vALor do IP do vector de INTerrupção 8
+    54 00000061 26A12200                		MOV     AX, [ES:INTr*4+2]   		; Carrega em AX o vALor do CS do vector de INTerrupção 8
+    55 00000065 A3[0000]                		MOV     [cs_dos], AX  				; Salva na variável cs_dos o vALor do CS do vector de INTerrupção 8   
+    56 00000068 268C0E2200              		MOV     [ES:INTr*4+2], CS			; Atualiza o valor do CS do vector de INTerrupção 8 com o CS do programa atuAL
+    57 0000006D 26C7062000[A100]        		MOV     WORD [ES:INTr*4],ClockINT	; Atualiza o valor do IP do vector de INTerrupção 8 com o offset "ClockINT" do programa atuAL
+    58 00000074 FB                      		STI									; Habilita INTerrupções por harDWare - pin INTR SIM atende INTerrupções externas
+    59                                  	
+    60                                  l1:											; No loop principal l1, a função converte só é chamada se a variável tique for iguAL a 0, se não, verifica se ALguma tecla foi acionada para sair do programa
+    61 00000075 803E[1700]00            		CMP 	byte [tique], 0				; Compara variável tique com zero
+    62 0000007A 7503                    		JNE 	ab							; Pula a ab se tique for diferente de zero	
+    63 0000007C E87000                  		CALL 	converte					; Chama função converte se ab for iguAL a zero
+    64                                  
+    65 0000007F B40B                    ab: 	MOV 	AH,0Bh						; Carrega em AH o valor de 0Bh, parâmetro para ler o teclado com interrupção por software "INT 21h"	
+    66 00000081 CD21                    		INT 	21h							; Le buffer de teclado e armazena em AL "0" se nehuma tecla foi acionada ou "1" se qualquer tecla foi acionada
+    67 00000083 3C00                    		CMP 	AL,0						; Se o buffer está vacio, ou seja, nehuma tecla foi acionada pula para "l1", se não, pula para "fim"
+    68 00000085 7503                    		JNE 	fim							; Salto condicional -> se o teclado foi acionado pula para "fim"	
+    69 00000087 E9EBFF                  		JMP 	l1							; Salta para l1 se nehuma tecla foi acionada, ou seja, se a clausula do salto condicionla "linha 31" não foi acionada
+    70                                  
+    71                                  fim:										; Ao sair do programa temos que restaurar o CS:IP da Interrupção 8, que INCialmente alteramos nas linhas 19 e 20
+    72 0000008A FA                      		CLI									; Deshabilita Interrupções por harDWare - pin INTR NÃO atende Interrupções externas							
+    73 0000008B 31C0                    		XOR     AX, AX						; Limpa o registrador AX, é equivalente a fazer "MOV AX,0"
+    74 0000008D 8EC0                    		MOV     ES, AX						; Inicializa o registrador de Segmento Extra ES para acessar à região de vetores de INTerrupção (posição zero de memoria)
+    75 0000008F A1[0000]                		MOV     AX, [cs_dos]				; Carrega em AX o valor do CS do vector de INTerrupção 8 que foi salvo na variável cs_dos -> linha 16
+    76 00000092 26A32200                		MOV     [ES:INTr*4+2], AX			; Atualiza o valor do CS do vector de INTerrupção 8 que foi salvo na variável cs_dos
+    77 00000096 A1[0200]                		MOV     AX, [offset_dos]			; Carrega em AX o valor do IP do vector de INTerrupção 8 que foi salvo na variável offset_dos				
+    78 00000099 26A32000                		MOV     [ES:INTr*4], AX 			; Atualiza o valor do IP do vector de INTerrupção 8 que foi salvo na variável offset_dos
+    79 0000009D B44C                    		MOV     AH, 4Ch						; Carrega em AH o valor de 4Ch, parametro para INT 21h
+    80 0000009F CD21                    		INT     21h							; Chama Interrupção 21h para RETornar o controle ao sistema operacional -> sai de forma segura da execução do programa
+    81                                  
+    82                                  ClockINT:									; Este segmento de código só será executado se um pulso de relojio está ativo, ou seja, se a INT 8h for acionada!
+    83 000000A1 50                      		PUSH	AX							; Salva contexto na pilha							
+    84 000000A2 1E                      		PUSH	DS
+    85 000000A3 B8[0000]                		MOV     AX,data						; Carrega em AX o endereço de "data" -> Região do código onde encontra-se o segemeto de dados "Segment data"
+    86 000000A6 8ED8                    		MOV     DS,AX						; Atualiza registrador de segmento de dados DS, isso pode ser feito no inicio do programa!	
+    87                                      
+    88 000000A8 FE06[1700]              		INC		byte [tique]				; Incremente variável tique toda vez que entra na interrupção
+    89 000000AC 803E[1700]12            		CMP		byte[tique], 18				; Compara variável "teique" com 18, isso para alterar os valores do relogio a cada segundo -> 18/18.2 ~1 segundo!
+    90 000000B1 7235                    		JB		Fimrel						; Se for menor que 18 pula para Fimrel
+    91 000000B3 C606[1700]00            		MOV 	byte [tique], 0				; Se não, limpa variável tique e  
+    92 000000B8 FE06[1800]              		INC 	byte [segundo]				; Incrementa variável segundo
+    93 000000BC 803E[1800]3C            		CMP 	byte [segundo], 60			; Compara variável "segundo" com 60
+    94 000000C1 7225                    		JB   	Fimrel						; Se segundo for menor do que 60, pula para Fimrel
+    95 000000C3 C606[1800]00            		MOV 	byte [segundo], 0			; Se não, limpa segundo e
+    96 000000C8 FE06[1900]              		INC 	byte [minuto]				; Incrementa variável minuto
+    97 000000CC 803E[1900]3C            		CMP 	byte [minuto], 60			; Compara variável "minuto" com 60
+    98 000000D1 7215                    		JB   	Fimrel						; Se minuto for menor do que 60, pula para Fimrel
+    99 000000D3 C606[1900]00            		MOV 	byte [minuto], 0			; Se não, limpa minuto e
+   100 000000D8 FE06[1A00]              		INC 	byte [hora]					; Incrementa variável hora
+   101 000000DC 803E[1A00]18            		CMP 	byte [hora], 24				; Compara variável "hora" com 24
+   102 000000E1 7205                    		JB   	Fimrel						; Se hora for menor do que 24, pula para Fimrel
+   103 000000E3 C606[1A00]00            		MOV 	byte [hora], 0				; Se não, limpa hora	
+   104                                  Fimrel:
+   105 000000E8 B020                    		MOV		AL,eoi						; Carrega o AL com a byte de End of Interruption, -> 20h por default						
+   106 000000EA E620                    		OUT		20h,AL						; Livera o PIC que está na porta 20h
+   107 000000EC 1F                      		POP		DS							; Reestablece os registradores salvos na pilha na linha 46
+   108 000000ED 58                      		POP		AX
+   109 000000EE CF                      		IRET								; Retorna da interrupção
+   110                                  		
+   111                                  converte:									; Esta função conver os valores binarios/decimais para ascii, ou seja acrecenta 0x30 a cada numero
+   112 000000EF 50                      		PUSH 	AX							; Salva contexto na pilha
+   113 000000F0 1E                      		PUSH    DS
+   114 000000F1 B8[0000]                		MOV     AX, data					; Carrega em AX o endereço de "data" -> Região do código onde encontra-se o segemeto de dados "Segment data"
+   115 000000F4 8ED8                    		MOV     DS, AX						; Atualiza registrador de segmento de dados DS, isso pode ser feito no inicio do programa!
+   116                                  		
+   117 000000F6 30E4                    		XOR 	AH, AH						; Limpa AH, pois será utilizado na operação de divisão 
+   118 000000F8 B30A                    		MOV     BL, 10						; Carrega o operando da divisão
+   119 000000FA A0[1800]                		MOV 	AL, byte [segundo]			; Carrega em AL o valor da variável segundo de 0 até 59
+   120 000000FD F6F3                    		DIV     BL							; Divide AL por BL, ou seja, AL/10. Como 10 é um byte, o cociente fica armacenado em AL e o residuo em AH 
+   121 000000FF 0430                    		ADD     AL, 30h 					; Acrecenta 0x30 ao cociente para converter em ascii                                                                                          
+   122 00000101 A2[2100]                		MOV     byte [horario+6], AL		; Atualiza a variável "horario" ná posição decenas de segundos
+   123 00000104 80C430                  		ADD     AH, 30h						; Acrecenta 0x30 ao residuo para converter em ascii
+   124 00000107 8826[2200]              		MOV 	byte [horario+7], AH		; Atualiza a variável "horario" ná posição unidades de segundos
+   125                                  											
+   126 0000010B 30E4                    		XOR 	AH, AH						; Repete o processo anterior para minutos
+   127 0000010D A0[1900]                		MOV 	AL, byte [minuto]
+   128 00000110 F6F3                    		DIV     BL
+   129 00000112 0430                    		ADD     AL, 30h                                                                                          
+   130 00000114 A2[1E00]                		MOV     byte [horario+3], AL
+   131 00000117 80C430                  		ADD     AH, 30h
+   132 0000011A 8826[1F00]              		MOV 	byte [horario+4], AH
+   133                                  	
+   134 0000011E 30E4                    		XOR 	AH, AH						; Repete o processo anterior para horas
+   135 00000120 A0[1A00]                		MOV 	AL, byte [hora]
+   136 00000123 F6F3                    		DIV     BL
+   137 00000125 0430                    		ADD     AL, 30h                                                                                          
+   138 00000127 A2[1B00]                		MOV     byte [horario], AL
+   139 0000012A 80C430                  		ADD     AH, 30h
+   140 0000012D 8826[1C00]              		MOV 	byte [horario+1], AH
+   141                                  		
+   142 00000131 B409                    		MOV 	AH, 09h						; Imprime o valor de horario com a interrupção 21h
+   143 00000133 BA[1B00]                		MOV 	dx, horario
+   144 00000136 CD21                    		INT 	21h
+   145                                  		
+   146 00000138 1F                      		POP     DS							; Recupera contexto salvo nas linhas 75 e 76
+   147 00000139 58                      		POP     AX
+   148 0000013A C3                      		RET 								; Retorna da função 
+   149                                  
+   150                                  segment data
+   151                                  
+   152                                  		kb_data EQU 60h  				; PORTA DE LEITURA DE TECLADO
+   153                                          kb_ctl  EQU 61h  				; PORTA DE RESET PARA PEDIR NOVA INTERRUPCAO
+   154                                          pictrl  EQU 20h					; PORTA DO PIC DE TECLADO
+   155                                          eoi     EQU 20h					; Byte de final de interrupção PIC - resgistrador
+   156                                          INT9    EQU 9h					; Interrupção por hardware do teclado
+   157 00000000 0100                            cs_dos  DW  1					; Variável de 2 bytes para armacenar o CS da INT 9
+   158 00000002 0100                            offset_dos  DW 1				; Variável de 2 bytes para armacenar o IP da INT 9
+   159 00000004 00                              tecla_u db 0
+   160 00000005 <res 00000008>                  tecla   resb  8					; Variável de 8 bytes para armacenar a tecla presionada. Só precisa de 2 bytes!	 
+   161 0000000D 0000                            p_i     dw  0   				; Indice p/ Interrupcao (Incrementa na ISR quando pressiona/solta qualquer tecla)  
+   162 0000000F 0000                            p_t     dw  0   				; Indice p/ Interrupcao (Incrementa após retornar da ISR quando pressiona/solta qualquer tecla)    
+   163 00000011 00000D0A24                      teclasc DB  0,0,13,10,'$'		; Variável tipo char para printar o código Make/Break em hexadecimal
+   164                                  
+   165                                  		;eoi     	EQU 20h					; Byte de final de interrupção PIC - resgistrador OCW2 do 8259A
+   166                                  		;pictrl  	EQU 20h					; Porta do PIC do Clock -> tick de ~54.9 ms 
+   167                                  		INTr	   	EQU 08h					; Interrupção por hardware do tick
+   168 00000016 00                      		char		DB	0
+   169                                  		;offset_dos	DW	0					; Variável de 2 bytes para armacenar o IP da INT 8
+   170                                  		;cs_dos		DW	0					; Variável de 2 bytes para armacenar o CS da INT 8
+   171 00000017 00                      		tique		DB  0					; Variável de 2 bytes que é incrementada a cada tick do clock ~54.9 ms 
+   172 00000018 00                      		segundo		DB  0					; Variável para os segundos
+   173 00000019 00                      		minuto 		DB  0					; Variável para os minutos
+   174 0000001A 00                      		hora 		DB  0					; Variável para as horas
+   175 0000001B 00003A00003A000020-     		horario		DB  0,0,':',0,0,':',0,0,' ', 13,'$' ; Variável typo string para printar o relogio
+   176 00000024 0D24               
+   177                                  
+   178                                  segment stack stack							; Segmento da pilha -> SS
+   179 00000000 <res 00000100>          		resb 256							; Reserva 256 bytes para a pilha
+   180                                  stacktop:									; Define ponteiro do topo da pilha -> SP
