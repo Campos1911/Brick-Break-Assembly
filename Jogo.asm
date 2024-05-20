@@ -150,7 +150,10 @@ fazQuadrado2: ; Segunda linha de quadrados (linha inferior)
 
 
 
+
+
 delay: ; Esteja atento pois talvez seja importante salvar contexto (no caso, CX, o que NÃO foi feito aqui).
+
 
 continua:
     	call limpa_bola
@@ -267,6 +270,7 @@ sai:
         int 10h
         mov ax,4c00h
         int 21h
+		
 
 verificar_teclas:
         push bp
@@ -275,6 +279,8 @@ verificar_teclas:
         ; Verifica se a tecla de seta para cima foi pressionada
         mov ah, 08h
         int 21h
+		cmp al, 70h
+		je	pausa
         cmp al, 71h ; Código ASCII para a tecla 'q'
         je sai
         cmp al, 64h ; Código ASCII para a tecla 'd'
@@ -293,6 +299,13 @@ verificar_teclas:
 
         jmp fim_verificar_teclas
 
+
+pausa:
+        mov ah, 08h
+        int 21h
+		cmp al, 70h
+		jne pausa
+		jmp continua
 
 verificar_baixo:
         ;Verifica se a tecla de seta para baixo foi pressionada
@@ -332,18 +345,18 @@ verifica1:
         jge rebate_baixo1
         ret
 
-rebate_cima1:
-        mov bx, [player_x1]
-        add bx, 16
-        cmp [px], bx
-        jge rebate_cima2
+ rebate_cima1:
+		mov bx, [player_x1]
+		sub bx, 16
+		cmp [px], bx
+		jge rebate_cima2
         ret
 
-rebate_cima2:
+ rebate_cima2:
         mov ax, [vy]
         neg ax
         mov bx, ax
-        mov [vy], bx
+		mov [vy], bx
         ret
 
 rebate_baixo1:
@@ -361,22 +374,22 @@ rebate_baixo2:
         ret
 
 limpa_raquete:
-        mov     byte[cor], preto    ;limpa jogador
+        mov     byte[cor], preto    ;limpa raquete
         mov     ax,[player_x1]
-        push        ax
+        push    ax
         mov     ax,10
-        push        ax
+        push    ax
         mov     ax,[player_x2]
-        push        ax
+        push    ax
         mov     ax,10
-        push        ax
-        call        line
+        push    ax
+        call    line
         ret
-
+		
 ; Finalizando o programa
 		mov    	ah,08h
 		int     21h
-	    mov  	ah,0   			; set video mode
+	    mov  	ah,0   					; set video mode
 	    mov  	al,[modo_anterior]   	; modo anterior
 	    int  	10h
 		mov     ax,4c00h
@@ -429,13 +442,13 @@ caracter:
     	mov     	cx,1
    		mov     	bl,[cor]
     	int     	10h
-		pop		bp
-		pop		di
-		pop		si
-		pop		dx
-		pop		cx
-		pop		bx
-		pop		ax
+		pop			bp
+		pop			di
+		pop			si
+		pop			dx
+		pop			cx
+		pop			bx
+		pop			ax
 		popf
 		ret
 ;_____________________________________________________________________________
@@ -446,7 +459,7 @@ caracter:
 ; cor definida na variavel cor
 plot_xy:
 		push		bp
-		mov		bp,sp
+		mov			bp,sp
 		pushf
 		push 		ax
 		push 		bx
@@ -458,18 +471,18 @@ plot_xy:
 	    mov     	al,[cor]
 	    mov     	bh,0
 	    mov     	dx,479
-		sub		dx,[bp+4]
+		sub			dx,[bp+4]
 	    mov     	cx,[bp+6]
 	    int     	10h
-		pop		di
-		pop		si
-		pop		dx
-		pop		cx
-		pop		bx
-		pop		ax
-		popf
-		pop		bp
-		ret		4
+		pop			di
+		pop			si
+		pop			dx
+		pop			cx
+		pop			bx
+		pop			ax
+		popf	
+		pop			bp
+		ret			4
 ;_____________________________________________________________________________
 ;    fun��o circle
 ;	 push xc; push yc; push r; call circle;  (xc+r<639,yc+r<479)e(xc-r>0,yc-r>0)
