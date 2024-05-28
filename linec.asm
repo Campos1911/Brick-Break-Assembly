@@ -121,8 +121,8 @@ segment code
 
     	mov     	cx,14			;n�mero de caracteres
     	mov     	bx,0
-    	mov     	dh,0			;linha 0-29
-    	mov     	dl,30			;coluna 0-79
+    	mov     	dh,18			;linha 0-29
+    	mov     	dl,0			;coluna 0-79
 		mov		byte[cor],azul
 l4:
 		call	cursor
