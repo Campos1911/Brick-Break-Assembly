@@ -239,7 +239,6 @@ moveesquerda:
         jmp continua
 
 movedireita:
-
 		call limpa_bola
         mov ax, [vx]
         neg ax
@@ -248,7 +247,6 @@ movedireita:
         jmp continua
 
 movebaixo:
-
         mov ax, [vy]
         neg ax
         mov bx, ax
@@ -256,7 +254,6 @@ movebaixo:
         jmp continua
 
 movecima:
-
         mov ax, [vy]
         neg ax
         mov bx, ax
@@ -270,7 +267,6 @@ sai:
         int 10h
         mov ax,4c00h
         int 21h
-		
 
 verificar_teclas:
         push bp
@@ -295,7 +291,6 @@ verificar_teclas:
         mov ax, 20
         add ax, [player_x2]
         mov [player_x2], ax
-
         jmp fim_verificar_teclas
 
 
@@ -326,10 +321,10 @@ fim_verificar_teclas:
         jmp continua
 
 calcular_colisao_raquete:
-        mov ax, 30
+        mov ax, 26
         cmp [py], ax
         je verifica1
-		jl	game_over
+		@ jl	game_over
         ret
 
 game_over:
@@ -364,7 +359,7 @@ verifica1:
         add bx, 16
         cmp [px], bx
 
- rebate_cima2:
+rebate_cima2:
         mov ax, [vy]
         neg ax
         mov bx, ax
@@ -397,7 +392,7 @@ limpa_raquete:
         push    ax
         call    line
         ret
-		
+
 user_finaliza:
 ; Finalizando o programa
 		mov    	ah,08h
