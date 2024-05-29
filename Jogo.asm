@@ -198,7 +198,7 @@ del1:
         cmp [px], bx
         jle movedireita
 
-        mov bx, 360
+        mov bx, 480
         cmp [py], bx
         jge movebaixo
 
@@ -329,11 +329,11 @@ fim_verificar_teclas:
 calcular_colisao_raquete:
         mov ax, 30
         cmp [py], ax
-        je verifica1
+        je verifica_colisao_raquete
 		jl game_over
         ret
 
-verifica1:
+verifica_colisao_raquete:
         mov bx, [player_x2]
         add bx, 16
         cmp [px], bx
@@ -344,14 +344,15 @@ verifica1:
         jge rebate_baixo1
         ret
 
- rebate_cima1:
+;FUNÇÕES RESPONSÁVEIS POR REBATER A BOLA E ALTERAR A DIREÇÃO (ESQUERDA OU DIREITA)
+rebate_cima1:
 		mov bx, [player_x1]
 		sub bx, 16
 		cmp [px], bx
 		jge rebate_cima2
         ret
 
- rebate_cima2:
+rebate_cima2:
         mov ax, [vy]
         neg ax
         mov bx, ax
@@ -371,9 +372,10 @@ rebate_baixo2:
         mov bx, ax
         mov [vy], bx
         ret
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-limpa_raquete:
-        mov     byte[cor], preto    ;limpa raquete
+limpa_raquete: ;FUNÇÃO UTILIZADA PARA ATUALIZAR A POSIÇÃO DA RAQUETE 
+        mov     byte[cor], preto
         mov     ax,[player_x1]
         push    ax
         mov     ax,10
@@ -388,9 +390,8 @@ limpa_raquete:
 game_over:
 		mov     	cx,35			;número de caracteres
     	mov     	bx,0
-    	mov     	dh,10			;linha 0-
-		
-    	mov     	dl,10			;coluna 0-79
+    	mov     	dh,10			
+    	mov     	dl,10
 		mov		byte[cor],branco_intenso
 
 repete_para_escrever:
@@ -407,14 +408,13 @@ verfica_continua_ou_nao:
 
 		mov ah, 08h
         int 21h
-		;cmp al, 79h
-		;je reset_game
 		cmp al, 6eh
 		je	acaba
+		cmp al, 79h
+		je limpa_tudo
 		jmp	verfica_continua_ou_nao
 
-acaba:
-; Finalizando o programa
+acaba: ;Finalizando o programa
 		mov    	ah,08h
 		int     21h
 	    mov  	ah,0   					; set video mode
@@ -423,6 +423,8 @@ acaba:
 		mov     ax,4c00h
 		int     21h
 
+limpa_tudo: ;FUNÇÃO PARA LIMPAR O CAMPO TODO E VOLTAR PARA O ZERO
+	call reset_game
 
 ;***************************************************************************
 ;
@@ -993,7 +995,6 @@ x1A				dw		5
 x2A				dw		105
 x1B 			dw		5
 x2B  			dw		105
-mens    		db  		'Funcao Grafica'
 
 player_x1    	dw      270
 player_x2    	dw      370
