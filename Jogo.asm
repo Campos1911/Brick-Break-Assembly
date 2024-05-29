@@ -239,6 +239,7 @@ moveesquerda:
         jmp continua
 
 movedireita:
+
 		call limpa_bola
         mov ax, [vx]
         neg ax
@@ -247,6 +248,7 @@ movedireita:
         jmp continua
 
 movebaixo:
+
         mov ax, [vy]
         neg ax
         mov bx, ax
@@ -254,6 +256,7 @@ movebaixo:
         jmp continua
 
 movecima:
+
         mov ax, [vy]
         neg ax
         mov bx, ax
@@ -267,11 +270,13 @@ sai:
         int 10h
         mov ax,4c00h
         int 21h
+		
 
 verificar_teclas:
         push bp
         mov bp, sp
-		
+
+        ; Verifica se a tecla de seta para cima foi pressionada
         mov ah, 08h
         int 21h
 		cmp al, 70h
@@ -291,6 +296,7 @@ verificar_teclas:
         mov ax, 20
         add ax, [player_x2]
         mov [player_x2], ax
+
         jmp fim_verificar_teclas
 
 
@@ -302,8 +308,10 @@ pausa:
 		jmp continua
 
 verificar_baixo:
+        ;Verifica se a tecla de seta para baixo foi pressionada
         cmp al, 61h
-        jne fim_verificar_teclas
+        jne fim_verificar_teclas ; Se a tecla de seta para baixo não foi pressionada, finaliza a função
+
         call limpa_raquete
         mov ax, -20
         mov bx, 10
@@ -321,45 +329,31 @@ fim_verificar_teclas:
         jmp continua
 
 calcular_colisao_raquete:
-        mov ax, 26
+        mov ax, 30
         cmp [py], ax
         je verifica1
-		@ jl	game_over
+		jl game_over
         ret
-
-game_over:
-		mov     	cx,35			;número de caracteres
-    	mov     	bx,0
-    	mov     	dh,10			;linha 0-29
-    	mov     	dl,10			;coluna 0-79
-		mov		byte[cor],branco_intenso
-
-repete_para_escrever:
-		call	cursor
-    	mov     al,[bx+mens_3]
-		call	caracter
-    	inc     bx			;proximo caracter
-		inc		dl			;avanca a coluna
-    	loop    repete_para_escrever
-
-verfica_continua_ou_nao:
-		push bp
-        mov bp, sp
-
-		mov ah, 08h
-        int 21h
-		cmp al, 79h
-		je	user_finaliza
-		cmp al, 6eh
-		je	user_finaliza
-		jmp	verfica_continua_ou_nao
 
 verifica1:
         mov bx, [player_x2]
         add bx, 16
         cmp [px], bx
+        jle rebate_cima1
+        mov bx, [player_x1]
+        sub bx, 16
+        cmp [px], bx
+        jge rebate_baixo1
+        ret
 
-rebate_cima2:
+ rebate_cima1:
+		mov bx, [player_x1]
+		sub bx, 16
+		cmp [px], bx
+		jge rebate_cima2
+        ret
+
+ rebate_cima2:
         mov ax, [vy]
         neg ax
         mov bx, ax
@@ -392,8 +386,8 @@ limpa_raquete:
         push    ax
         call    line
         ret
-
-user_finaliza:
+		
+game_over:
 ; Finalizando o programa
 		mov    	ah,08h
 		int     21h
@@ -973,6 +967,7 @@ x1A				dw		5
 x2A				dw		105
 x1B 			dw		5
 x2B  			dw		105
+mens    		db  		'Funcao Grafica'
 
 player_x1    	dw      270
 player_x2    	dw      370
@@ -981,7 +976,7 @@ py      		dw      30
 vx      		dw      5
 vy      		dw      5
 mens_2      	db          'Pause '
-mens_3      	db          'GAME OVER. Deseja continuar? Y ou N'
+mens_3      	db          'GAME OVER'
 
 ;*************************************************************************
 segment stack stack
