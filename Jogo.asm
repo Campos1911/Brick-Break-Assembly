@@ -17,6 +17,7 @@ segment code
     	int     	10h
 		
 
+reset_game:
 ; Desenhando o campo (bordas brancas)
 		mov		byte[cor],branco_intenso
 		mov		ax, 0
@@ -147,9 +148,6 @@ fazQuadrado2: ; Segunda linha de quadrados (linha inferior)
 		add		word[x2B], 105
 		add		word[x1B] , 105
 		loop 	fazQuadrado2
-
-
-
 
 
 delay: ; Esteja atento pois talvez seja importante salvar contexto (no caso, CX, o que NÃO foi feito aqui).
@@ -386,8 +384,36 @@ limpa_raquete:
         push    ax
         call    line
         ret
-		
+
 game_over:
+		mov     	cx,35			;número de caracteres
+    	mov     	bx,0
+    	mov     	dh,10			;linha 0-
+		
+    	mov     	dl,10			;coluna 0-79
+		mov		byte[cor],branco_intenso
+
+repete_para_escrever:
+		call	cursor
+    	mov     al,[bx+mens_3]
+		call	caracter
+    	inc     bx			;proximo caracter
+		inc		dl			;avanca a coluna
+    	loop    repete_para_escrever
+
+verfica_continua_ou_nao:
+		push bp
+        mov bp, sp
+
+		mov ah, 08h
+        int 21h
+		;cmp al, 79h
+		;je reset_game
+		cmp al, 6eh
+		je	acaba
+		jmp	verfica_continua_ou_nao
+
+acaba:
 ; Finalizando o programa
 		mov    	ah,08h
 		int     21h
@@ -976,7 +1002,7 @@ py      		dw      30
 vx      		dw      5
 vy      		dw      5
 mens_2      	db          'Pause '
-mens_3      	db          'GAME OVER'
+mens_3      	db          'GAME OVER. Deseja continuar? Y ou N'
 
 ;*************************************************************************
 segment stack stack
