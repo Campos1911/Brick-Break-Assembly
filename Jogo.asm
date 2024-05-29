@@ -270,21 +270,20 @@ sai:
         int 21h
 		
 
-verificar_teclas:
+verificar_teclas: ;Estrutura para decidir o que será feito durante o jogo
         push bp
         mov bp, sp
 
-        ; Verifica se a tecla de seta para cima foi pressionada
         mov ah, 08h
         int 21h
-		cmp al, 70h
+		cmp al, 70h ; Código ASCII para a tecla 'p'
 		je	pausa
         cmp al, 71h ; Código ASCII para a tecla 'q'
         je sai
         cmp al, 64h ; Código ASCII para a tecla 'd'
         jne verificar_baixo
 
-        call limpa_raquete
+        call limpa_raquete ;Se 'd' não for pressionado, ele pula para baixo e mexe a raquete
         mov ax, 20 ;deslocamento de 20 em 20 da raquete
         mov bx, 630 ;testa se já chegou no limite
         cmp [player_x2], bx
@@ -387,7 +386,7 @@ limpa_raquete: ;FUNÇÃO UTILIZADA PARA ATUALIZAR A POSIÇÃO DA RAQUETE
         call    line
         ret
 
-game_over:
+game_over: ;;Escreve a mensagem na tela e espera a tecla do jogador
 		mov     	cx,35			;número de caracteres
     	mov     	bx,0
     	mov     	dh,10			
