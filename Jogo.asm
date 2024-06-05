@@ -199,7 +199,12 @@ del1:
 
         mov bx, 364 ; Limita o campo na parte de cima
         cmp [py], bx
-        jge movebaixo
+		jge movebaixo
+
+sobe_mais:
+		mov	bx, 414
+		cmp	[py], bx
+		jge	movebaixo
 
         mov bx, 10 ; Limita o campo na parte de baixo
         cmp [py], bx
@@ -246,6 +251,7 @@ movedireita:
 intermediateVerifTeclas:
 	jmp verificar_teclas
 
+
 movecima:
         mov ax, [vy]
         neg ax
@@ -253,6 +259,8 @@ movecima:
         mov [vy], bx
         jmp continua
 
+intermediateSobeMais:
+	jmp	sobe_mais
 ; NA PARTE DE DEVOLVER A BOLA PARA BAIXO, É FEITA A VERIFICAÇÃO DA COLISÃO COM UM QUADRADO
 movebaixo:
 		mov ax, 5 ; Quadrado 1
@@ -269,63 +277,114 @@ volta2:
 volta3:
 		mov ax, 320 ; Quadrado 4
 		cmp [px], ax
-		jge	verifica_quad4
+		jge	intermediateVerificaQuad4
 volta4:
 		mov ax, 425 ; Quadrado 5
 		cmp [px], ax
-		jge	verifica_quad5
+		jge	intermediateVerificaQuad5
 volta5:
 		mov ax, 530 ; Quadrado 6
 		cmp [px], ax
-		jge	verifica_quad6
+		jge	intermediateVerificaQuad6
+
 
 verifica_quad1:
+		mov	ax, 1
+		cmp ax, word[bloco_quebrado1]
 		mov ax, 105
 		cmp	[px], ax
 		mov word[apaga1], 5
 		mov word[apaga2], 105
-		jle	apaga_quad ; Se acertou no limite, apaga o quadrado e rebate a bola
-		jmp volta1 ; Se não acertou, volta para verificar o próximo quadrado
+		jg volta1 ; Se não acertou, volta para verificar o próximo quadrado
+		jmp	apaga_quad ; Se acertou no limite, apaga o quadrado e rebate a bola
+
+intermediateSobeMais2:
+	jmp intermediateSobeMais
 
 verifica_quad2:
+		mov	ax, 1
+		cmp ax, [bloco_quebrado2]
+		je	intermediateSobeMais
 		mov ax, 210
 		cmp	[px], ax
 		mov word[apaga1], 110
 		mov word[apaga2], 210
-		jle	apaga_quad
-		jmp volta2
+		jg volta2
+		jmp	apaga_quad
+
+intermediateVolta4:
+	jmp	volta4
+
+intermediateVolta3:
+	jmp	volta3
+
+intermediateVolta5:
+	jmp	volta5
+
+intermediateVerificaQuad4:
+	jmp verifica_quad4
+
+intermediateVerificaQuad5:
+	jmp verifica_quad5
+
+intermediateVerificaQuad6:
+	jmp verifica_quad6
+
 
 verifica_quad3:
+		mov	ax, 1
+		cmp ax, [bloco_quebrado3]
+		je	intermediateSobeMais2
 		mov ax, 315
 		cmp	[px], ax
 		mov word[apaga1], 215
 		mov word[apaga2], 315
-		jle	apaga_quad
-		jmp volta3
+		jge intermediateVolta3
+		mov	ax, 1
+		mov	word[bloco_quebrado3], ax
+		jmp	apaga_quad
 
+intermediateSobeMais3
+	jmp intermediateSobeMais2
 verifica_quad4:
+		mov	ax, 1
+		cmp ax, [bloco_quebrado4]
+		je	intermediateSobeMais2
 		mov ax, 420
 		cmp	[px], ax
 		mov word[apaga1], 320
 		mov word[apaga2], 420
-		jle	apaga_quad
-		jmp volta4
+		jge intermediateVolta4
+		mov	ax, 1
+		mov	word[bloco_quebrado4], ax
+		jmp	apaga_quad
 
 verifica_quad5:
+		mov	ax, 1
+		cmp ax, [bloco_quebrado5]
+		je	intermediateSobeMais3
 		mov ax, 525
 		cmp	[px], ax
 		mov word[apaga1], 425
 		mov word[apaga2], 525
-		jle	apaga_quad
-		jmp volta5
+		jge intermediateVolta5
+		mov	ax, 1
+		mov	word[bloco_quebrado5], ax
+		jmp	apaga_quad
 
 verifica_quad6:
+		mov	ax, 1
+		cmp ax, [bloco_quebrado6]
+		je	intermediateSobeMais3
 		mov ax, 630
 		cmp	[px], ax
 		mov word[apaga1], 530
 		mov word[apaga2], 630
-		jle	apaga_quad
-		jmp nao_apaga
+		jge nao_apaga
+		mov	ax, 1
+		mov	word[bloco_quebrado6], ax
+		jmp	apaga_quad
+
 
 apaga_quad:
 		mov		byte[cor], preto
@@ -1110,6 +1169,13 @@ player_x2    	dw      370
 
 px      		dw      320	;Posição da bola
 py      		dw      30
+
+bloco_quebrado1	dw		0	;Variável para testar se a bola pode subir mais
+bloco_quebrado2	dw		0
+bloco_quebrado3	dw		0
+bloco_quebrado4	dw		0
+bloco_quebrado5	dw		0
+bloco_quebrado6	dw		0
 
 vx      		dw      5	;Velocidade que a bola anda
 vy      		dw      5
