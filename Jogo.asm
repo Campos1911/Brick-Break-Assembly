@@ -50,7 +50,7 @@ reset_game:
 		push	ax
 		call	line
 
-; Carregando cx para fazer o loop e printar os quadrados (a cor é definida fora para ser incrementada dentro do loop)
+		; Carregando cx para fazer o loop e printar os quadrados (a cor é definida fora para ser incrementada dentro do loop)
 		mov		cx, 6
 		mov		byte[cor], azul
 	
@@ -100,7 +100,7 @@ fazQuadrado1:
 		add		word[x1A] , 105
 		loop 	fazQuadrado1
 		
-	; Carregando cx para fazer o loop e printar os quadrados (a cor é definida fora para ser incrementada dentro do loop)
+		; Carregando cx para fazer o loop e printar os quadrados (a cor é definida fora para ser incrementada dentro do loop)
 		mov		cx, 6
 		mov		byte[cor], cinza
 		
@@ -152,7 +152,6 @@ fazQuadrado2: ; Segunda linha de quadrados (linha inferior)
 
 delay: ; Esteja atento pois talvez seja importante salvar contexto (no caso, CX, o que NÃO foi feito aqui).
 
-
 continua:
     	call limpa_bola
 
@@ -179,7 +178,7 @@ continua:
 		mov		ax, 10
 		push	ax
 		call	line
-       
+
         pop cx ; Recupera cx da pilha
         loop del1 ; No loop del1, cx é decrementado até que volte a ser zero
         loop del2 ; No loop del2, cx é decrementado até que seja zero
@@ -190,26 +189,26 @@ del2:
         mov cx, 0800h ; Teste modificando este valor
 
 del1:
-        mov bx, 615
+        mov bx, 615 ;Limita o campo na parte da direita
         cmp [px], bx
         jge moveesquerda
 
-        mov bx, 20
+        mov bx, 20 ; Limita o campo na parte da esquerda
         cmp [px], bx
         jle movedireita
 
-        mov bx, 480
+        mov bx, 364 ; Limita o campo na parte de cima
         cmp [py], bx
         jge movebaixo
 
-        mov bx, 10
+        mov bx, 10 ; Limita o campo na parte de baixo
         cmp [py], bx
         jle movecima
 
         mov ah, 0bh      
         int 21h
         cmp al,0
-        jne verificar_teclas
+        jne intermediateVerifTeclas
 		call calcular_colisao_raquete
         jmp continua
 
@@ -237,7 +236,6 @@ moveesquerda:
         jmp continua
 
 movedireita:
-
 		call limpa_bola
         mov ax, [vx]
         neg ax
@@ -245,22 +243,132 @@ movedireita:
         mov [vx], bx
         jmp continua
 
-movebaixo:
-
-        mov ax, [vy]
-        neg ax
-        mov bx, ax
-        mov [vy], bx
-        jmp continua
+intermediateVerifTeclas:
+	jmp verificar_teclas
 
 movecima:
-
         mov ax, [vy]
         neg ax
         mov bx, ax
         mov [vy], bx
         jmp continua
 
+movebaixo:
+		mov ax, 5
+		cmp [px], ax
+		jge	verifica_quad1
+volta1:
+		mov ax, 110
+		cmp [px], ax
+		jge	verifica_quad2
+volta2:
+		mov ax, 215
+		cmp [px], ax
+		jge	verifica_quad3
+volta3:
+		mov ax, 320
+		cmp [px], ax
+		jge	verifica_quad4
+volta4:
+		mov ax, 425
+		cmp [px], ax
+		jge	verifica_quad5
+volta5:
+		mov ax, 530
+		cmp [px], ax
+		jge	verifica_quad6
+
+verifica_quad1:
+		mov ax, 105
+		cmp	[px], ax
+		mov word[apaga1], 5
+		mov word[apaga2], 105
+		jle	apaga_quad
+		jmp volta1
+verifica_quad2:
+		mov ax, 210
+		cmp	[px], ax
+		mov word[apaga1], 110
+		mov word[apaga2], 210
+		jle	apaga_quad
+		jmp volta2
+verifica_quad3:
+		mov ax, 315
+		cmp	[px], ax
+		mov word[apaga1], 215
+		mov word[apaga2], 315
+		jle	apaga_quad
+		jmp volta3
+verifica_quad4:
+		mov ax, 420
+		cmp	[px], ax
+		mov word[apaga1], 320
+		mov word[apaga2], 420
+		jle	apaga_quad
+		jmp volta4
+verifica_quad5:
+		mov ax, 525
+		cmp	[px], ax
+		mov word[apaga1], 425
+		mov word[apaga2], 525
+		jle	apaga_quad
+		jmp volta5
+verifica_quad6:
+		mov ax, 630
+		cmp	[px], ax
+		mov word[apaga1], 530
+		mov word[apaga2], 630
+		jle	apaga_quad
+		jmp nao_apaga
+
+apaga_quad:
+		mov		byte[cor], preto
+		mov		ax, word[apaga1]
+		push 	ax
+		mov		ax, 427
+		push	ax
+		mov		ax, word[apaga2]
+		push 	ax
+		mov		ax, 427
+		push	ax
+		call	line
+		
+		mov		ax, word[apaga2]
+		push 	ax
+		mov		ax, 427
+		push	ax
+		mov		ax, word[apaga2]
+		push 	ax
+		mov		ax, 387
+		push	ax
+		call	line
+		
+		mov		ax, word[apaga2]
+		push 	ax
+		mov		ax, 387
+		push	ax
+		mov		ax, word[apaga1]
+		push 	ax
+		mov		ax, 387
+		push	ax
+		call	line
+		
+		mov		ax, word[apaga1]
+		push 	ax
+		mov		ax, 387
+		push	ax
+		mov		ax, word[apaga1]
+		push 	ax
+		mov		ax, 427
+		push	ax
+		call	line
+
+nao_apaga:
+        mov ax, [vy]
+        neg ax
+        mov bx, ax
+        mov [vy], bx
+        jmp continua
 
 sai:
         mov ah,0 ; set video mode
@@ -273,7 +381,6 @@ sai:
 verificar_teclas: ;Estrutura para decidir o que será feito durante o jogo
         push bp
         mov bp, sp
-
         mov ah, 08h
         int 21h
 		cmp al, 70h ; Código ASCII para a tecla 'p'
@@ -282,7 +389,6 @@ verificar_teclas: ;Estrutura para decidir o que será feito durante o jogo
         je sai
         cmp al, 64h ; Código ASCII para a tecla 'd'
         jne verificar_baixo
-
         call limpa_raquete ;Se 'd' não for pressionado, ele pula para baixo e mexe a raquete
         mov ax, 20 ;deslocamento de 20 em 20 da raquete
         mov bx, 630 ;testa se já chegou no limite
@@ -293,22 +399,19 @@ verificar_teclas: ;Estrutura para decidir o que será feito durante o jogo
         mov ax, 20
         add ax, [player_x2]
         mov [player_x2], ax
-
         jmp fim_verificar_teclas
 
 
 pausa:
         mov ah, 08h
         int 21h
-		cmp al, 70h
+		cmp al, 70h ;Compara a tecla com a letra 'p', fica parado aqui até apertar 'p' novamente
 		jne pausa
 		jmp continua
 
 verificar_baixo:
-        ;Verifica se a tecla de seta para baixo foi pressionada
         cmp al, 61h
-        jne fim_verificar_teclas ; Se a tecla de seta para baixo não foi pressionada, finaliza a função
-
+        jne fim_verificar_teclas
         call limpa_raquete
         mov ax, -20
         mov bx, 10
@@ -994,6 +1097,8 @@ x1A				dw		5
 x2A				dw		105
 x1B 			dw		5
 x2B  			dw		105
+apaga1			dw		0
+apaga2			dw		0
 
 player_x1    	dw      270
 player_x2    	dw      370
