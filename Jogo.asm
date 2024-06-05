@@ -253,28 +253,29 @@ movecima:
         mov [vy], bx
         jmp continua
 
+; NA PARTE DE DEVOLVER A BOLA PARA BAIXO, É FEITA A VERIFICAÇÃO DA COLISÃO COM UM QUADRADO
 movebaixo:
-		mov ax, 5
+		mov ax, 5 ; Quadrado 1
 		cmp [px], ax
-		jge	verifica_quad1
+		jge	verifica_quad1 ; Pula para verificar se acertou no limite do quadrado (todos repetem essa lógica)
 volta1:
-		mov ax, 110
+		mov ax, 110 ; Quadrado 2
 		cmp [px], ax
 		jge	verifica_quad2
 volta2:
-		mov ax, 215
+		mov ax, 215 ; Quadrado 3
 		cmp [px], ax
 		jge	verifica_quad3
 volta3:
-		mov ax, 320
+		mov ax, 320 ; Quadrado 4
 		cmp [px], ax
 		jge	verifica_quad4
 volta4:
-		mov ax, 425
+		mov ax, 425 ; Quadrado 5
 		cmp [px], ax
 		jge	verifica_quad5
 volta5:
-		mov ax, 530
+		mov ax, 530 ; Quadrado 6
 		cmp [px], ax
 		jge	verifica_quad6
 
@@ -283,8 +284,9 @@ verifica_quad1:
 		cmp	[px], ax
 		mov word[apaga1], 5
 		mov word[apaga2], 105
-		jle	apaga_quad
-		jmp volta1
+		jle	apaga_quad ; Se acertou no limite, apaga o quadrado e rebate a bola
+		jmp volta1 ; Se não acertou, volta para verificar o próximo quadrado
+
 verifica_quad2:
 		mov ax, 210
 		cmp	[px], ax
@@ -292,6 +294,7 @@ verifica_quad2:
 		mov word[apaga2], 210
 		jle	apaga_quad
 		jmp volta2
+
 verifica_quad3:
 		mov ax, 315
 		cmp	[px], ax
@@ -299,6 +302,7 @@ verifica_quad3:
 		mov word[apaga2], 315
 		jle	apaga_quad
 		jmp volta3
+
 verifica_quad4:
 		mov ax, 420
 		cmp	[px], ax
@@ -306,6 +310,7 @@ verifica_quad4:
 		mov word[apaga2], 420
 		jle	apaga_quad
 		jmp volta4
+
 verifica_quad5:
 		mov ax, 525
 		cmp	[px], ax
@@ -313,6 +318,7 @@ verifica_quad5:
 		mov word[apaga2], 525
 		jle	apaga_quad
 		jmp volta5
+
 verifica_quad6:
 		mov ax, 630
 		cmp	[px], ax
@@ -1087,26 +1093,22 @@ rosa			equ		12
 magenta_claro	equ		13
 amarelo			equ		14
 branco_intenso	equ		15
-
-modo_anterior	db		0
-linha   		dw  		0
-coluna  		dw  		0
 deltax			dw		0
 deltay			dw		0
-x1A				dw		5
+
+modo_anterior	db		0
+x1A				dw		5	;Usados para printar os quadrados
 x2A				dw		105
 x1B 			dw		5
 x2B  			dw		105
-apaga1			dw		0
+apaga1			dw		0	;Variáveis para pegar qual quadrado apagar
 apaga2			dw		0
-
-player_x1    	dw      270
+player_x1    	dw      270	;Posição da raquete
 player_x2    	dw      370
-px      		dw      320
+px      		dw      320	;Posição da bola
 py      		dw      30
-vx      		dw      5
+vx      		dw      5	;Velocidade que a bola anda
 vy      		dw      5
-mens_2      	db          'Pause '
 mens_3      	db          'GAME OVER. Deseja continuar? Y ou N'
 
 ;*************************************************************************
