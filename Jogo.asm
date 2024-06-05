@@ -204,7 +204,7 @@ del1:
 sobe_mais:
 		mov	bx, 414
 		cmp	[py], bx
-		jge	movebaixo
+		jge	intermediateNaoApaga
 
         mov bx, 10 ; Limita o campo na parte de baixo
         cmp [py], bx
@@ -248,9 +248,11 @@ movedireita:
         mov [vx], bx
         jmp continua
 
-intermediateVerifTeclas:
-	jmp verificar_teclas
+intermediateNaoApaga
+	jmp	nao_apaga
 
+intermediateVerifTeclas: ;	Função intermediária para pular para outra parte do código
+	jmp verificar_teclas
 
 movecima:
         mov ax, [vy]
@@ -261,6 +263,7 @@ movecima:
 
 intermediateSobeMais:
 	jmp	sobe_mais
+
 ; NA PARTE DE DEVOLVER A BOLA PARA BAIXO, É FEITA A VERIFICAÇÃO DA COLISÃO COM UM QUADRADO
 movebaixo:
 		mov ax, 5 ; Quadrado 1
@@ -312,6 +315,7 @@ verifica_quad2:
 		jg volta2
 		jmp	apaga_quad
 
+;	Funções intermediárias para resolver o 'short jump'
 intermediateVolta4:
 	jmp	volta4
 
@@ -346,6 +350,7 @@ verifica_quad3:
 
 intermediateSobeMais3
 	jmp intermediateSobeMais2
+
 verifica_quad4:
 		mov	ax, 1
 		cmp ax, [bloco_quebrado4]
