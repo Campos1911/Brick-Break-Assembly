@@ -1057,8 +1057,6 @@ fim_line:
 ;*******************************************************************
 segment data
 
-cor		db		branco_intenso
-
 ;	I R G B COR
 ;	0 0 0 0 preto
 ;	0 0 0 1 azul
@@ -1077,6 +1075,8 @@ cor		db		branco_intenso
 ;	1 1 1 0 amarelo
 ;	1 1 1 1 branco intenso
 
+
+cor				db		branco_intenso
 preto			equ		0
 azul			equ		1
 verde			equ		2
@@ -1095,18 +1095,22 @@ amarelo			equ		14
 branco_intenso	equ		15
 deltax			dw		0
 deltay			dw		0
-
 modo_anterior	db		0
+
 x1A				dw		5	;Usados para printar os quadrados
 x2A				dw		105
 x1B 			dw		5
 x2B  			dw		105
+
 apaga1			dw		0	;Variáveis para pegar qual quadrado apagar
 apaga2			dw		0
+
 player_x1    	dw      270	;Posição da raquete
 player_x2    	dw      370
+
 px      		dw      320	;Posição da bola
 py      		dw      30
+
 vx      		dw      5	;Velocidade que a bola anda
 vy      		dw      5
 mens_3      	db          'GAME OVER. Deseja continuar? Y ou N'
