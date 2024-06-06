@@ -210,6 +210,11 @@ sobe_mais:
 		cmp	[py], bx
 		jge	intermediateMoveBaixo2
 
+sobe_tudo:
+		mov	bx, 450
+		cmp	[py], bx
+		jge	intermediateNaoApaga
+
         mov bx, 10 ; Limita o campo na parte de baixo
         cmp [py], bx
         jle movecima
@@ -252,6 +257,9 @@ movedireita:
         mov [vx], bx
         jmp continua
 
+intermediateMoveBaixo2
+	jmp movebaixo2
+
 movecima:
         mov ax, [vy]
         neg ax
@@ -260,8 +268,6 @@ movecima:
         jmp continua
 
 ;  PONTOS INTERMEDIÁRIOS PARA AS FUNÇÕES
-intermediateMoveBaixo2
-	jmp movebaixo2
 
 intermediateNaoApaga
 	jmp	nao_apaga
@@ -271,6 +277,9 @@ intermediateVerifTeclas: ;	Função intermediária para pular para outra parte d
 
 intermediateSobeMais:
 	jmp	sobe_mais
+
+intermediateSobeTudo:
+	jmp	sobe_tudo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -320,6 +329,12 @@ ignora1:
 intermediateSobeMais2:
 	jmp intermediateSobeMais
 
+intermediateSobeTudo2:
+	jmp intermediateSobeTudo
+
+intermediateVerificaQuad3:
+	jmp verifica_quad3
+
 verifica_quad2:
 		mov ax, 210
 		cmp	[px], ax
@@ -338,8 +353,9 @@ ignora2:
 		jmp	apaga_quad
 
 ;	Funções intermediárias para resolver o 'short jump'
-intermediateVerificaQuad3:
-	jmp verifica_quad3
+
+intermediateVerificaQuad4:
+	jmp verifica_quad4
 
 intermediateVolta4:
 	jmp	volta4
@@ -348,15 +364,15 @@ intermediateVolta4:
 intermediateVolta3:
 	jmp	volta3
 
+intermediateVerificaQuad5:
+	jmp verifica_quad5
 
-intermediateVerificaQuad4:
-	jmp verifica_quad4
+
+
 intermediateVolta5:
 	jmp	volta5
 
 
-intermediateVerificaQuad5:
-	jmp verifica_quad5
 
 intermediateVerificaQuad6:
 	jmp verifica_quad6
@@ -366,7 +382,7 @@ intermediateVerificaQuad6:
 verifica_quad3:
 		mov ax, 315
 		cmp	[px], ax
-		jge intermediateVolta3
+		jg intermediateVolta3
 		mov	ax, 477
 		cmp ax, word[yToDelete1]
 		je	ignora3
@@ -380,13 +396,11 @@ ignora3:
 		mov	word[bloco_quebrado3], ax
 		jmp	apaga_quad
 
-intermediateSobeMais3
-	jmp intermediateSobeMais2
 
 verifica_quad4:
 		mov ax, 420
 		cmp	[px], ax
-		jge intermediateVolta4
+		jg intermediateVolta4
 		mov	ax, 477
 		cmp ax, word[yToDelete1]
 		je	ignora4
@@ -400,10 +414,16 @@ ignora4:
 		mov	word[bloco_quebrado4], ax
 		jmp	apaga_quad
 
+intermediateSobeMais3
+	jmp intermediateSobeMais2
+
+intermediateSobeTudo3
+	jmp intermediateSobeTudo2
+
 verifica_quad5:
 		mov ax, 525
 		cmp	[px], ax
-		jge intermediateVolta5
+		jg intermediateVolta5
 		mov	ax, 477
 		cmp ax, word[yToDelete1]
 		je	ignora5
@@ -420,10 +440,13 @@ ignora5:
 verifica_quad6:
 		mov ax, 630
 		cmp	[px], ax
-		jge nao_apaga
+		jg intermediateNaoApaga2
+		mov	ax, 1
+		cmp ax, [bloco_cima_quebrado6]
+		je	intermediateSobeTudo3
 		mov	ax, 477
 		cmp ax, word[yToDelete1]
-		je	ignora6
+		je	cima_quebrado6
 		mov	ax, 1
 		cmp ax, [bloco_quebrado6]
 		je	intermediateSobeMais3
@@ -433,7 +456,13 @@ ignora6:
 		mov	ax, 1
 		mov	word[bloco_quebrado6], ax
 		jmp	apaga_quad
+cima_quebrado6:
+	mov	ax, 1
+	mov	word[bloco_cima_quebrado6], ax
+	jmp	ignora6
 
+intermediateNaoApaga2
+	jmp nao_apaga
 
 apaga_quad:
 		mov		byte[cor], preto
@@ -1225,6 +1254,8 @@ bloco_quebrado3	dw		0
 bloco_quebrado4	dw		0
 bloco_quebrado5	dw		0
 bloco_quebrado6	dw		0
+
+bloco_cima_quebrado6	dw		0
 
 yToDelete1		dw		0
 yToDelete2		dw		0
