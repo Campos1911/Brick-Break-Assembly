@@ -198,6 +198,8 @@ del1:
         jle movedireita
 
         mov bx, 364 ; Limita o campo na parte de cima
+		mov	word[yToDelete1], 427
+		mov	word[yToDelete2], 387
         cmp [py], bx
 		jge movebaixo
 
@@ -400,41 +402,41 @@ apaga_quad:
 		mov		byte[cor], preto
 		mov		ax, word[apaga1]
 		push 	ax
-		mov		ax, 427
+		mov		ax, word[yToDelete1]
 		push	ax
 		mov		ax, word[apaga2]
 		push 	ax
-		mov		ax, 427
+		mov		ax, word[yToDelete1]
 		push	ax
 		call	line
 		
 		mov		ax, word[apaga2]
 		push 	ax
-		mov		ax, 427
+		mov		ax, word[yToDelete1]
 		push	ax
 		mov		ax, word[apaga2]
 		push 	ax
-		mov		ax, 387
+		mov		ax, word[yToDelete2]
 		push	ax
 		call	line
 		
 		mov		ax, word[apaga2]
 		push 	ax
-		mov		ax, 387
+		mov		ax, word[yToDelete2]
 		push	ax
 		mov		ax, word[apaga1]
 		push 	ax
-		mov		ax, 387
+		mov		ax, word[yToDelete2]
 		push	ax
 		call	line
 		
 		mov		ax, word[apaga1]
 		push 	ax
-		mov		ax, 387
+		mov		ax, word[yToDelete2]
 		push	ax
 		mov		ax, word[apaga1]
 		push 	ax
-		mov		ax, 427
+		mov		ax, word[yToDelete1]
 		push	ax
 		call	line
 
@@ -1186,6 +1188,9 @@ bloco_quebrado3	dw		0
 bloco_quebrado4	dw		0
 bloco_quebrado5	dw		0
 bloco_quebrado6	dw		0
+
+yToDelete1		dw		0
+yToDelete2		dw		0
 
 vx      		dw      5	;Velocidade que a bola anda
 vy      		dw      5
