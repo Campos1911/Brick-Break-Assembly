@@ -292,29 +292,34 @@ volta5:
 
 
 verifica_quad1:
-		mov	ax, 1
-		cmp ax, word[bloco_quebrado1]
 		mov ax, 105
 		cmp	[px], ax
+		jg volta1 ; Se não acertou, volta para verificar o próximo quadrado
+		mov	ax, 1
+		cmp ax, word[bloco_quebrado1]
+		je	intermediateSobeMais
 		mov word[apaga1], 5
 		mov word[apaga2], 105
-		jg volta1 ; Se não acertou, volta para verificar o próximo quadrado
+		mov	ax, 1
+		mov	word[bloco_quebrado1], ax
 		jmp	apaga_quad ; Se acertou no limite, apaga o quadrado e rebate a bola
 
 intermediateSobeMais2:
 	jmp intermediateSobeMais
 
 verifica_quad2:
+		mov ax, 210
+		cmp	[px], ax
+		jg volta2
 		mov	ax, 1
 		cmp ax, [bloco_quebrado2]
 		je	intermediateSobeMais
-		mov ax, 210
-		cmp	[px], ax
 		mov word[apaga1], 110
 		mov word[apaga2], 210
-		jg volta2
+		mov ax, 1
+		mov	word[bloco_quebrado2], ax
 		jmp	apaga_quad
-
+nas
 ;	Funções intermediárias para resolver o 'short jump'
 intermediateVolta4:
 	jmp	volta4
@@ -336,14 +341,14 @@ intermediateVerificaQuad6:
 
 
 verifica_quad3:
+		mov ax, 315
+		cmp	[px], ax
+		jge intermediateVolta3
 		mov	ax, 1
 		cmp ax, [bloco_quebrado3]
 		je	intermediateSobeMais2
-		mov ax, 315
-		cmp	[px], ax
 		mov word[apaga1], 215
 		mov word[apaga2], 315
-		jge intermediateVolta3
 		mov	ax, 1
 		mov	word[bloco_quebrado3], ax
 		jmp	apaga_quad
@@ -352,40 +357,40 @@ intermediateSobeMais3
 	jmp intermediateSobeMais2
 
 verifica_quad4:
+		mov ax, 420
+		cmp	[px], ax
+		jge intermediateVolta4
 		mov	ax, 1
 		cmp ax, [bloco_quebrado4]
 		je	intermediateSobeMais2
-		mov ax, 420
-		cmp	[px], ax
 		mov word[apaga1], 320
 		mov word[apaga2], 420
-		jge intermediateVolta4
 		mov	ax, 1
 		mov	word[bloco_quebrado4], ax
 		jmp	apaga_quad
 
 verifica_quad5:
+		mov ax, 525
+		cmp	[px], ax
+		jge intermediateVolta5
 		mov	ax, 1
 		cmp ax, [bloco_quebrado5]
 		je	intermediateSobeMais3
-		mov ax, 525
-		cmp	[px], ax
 		mov word[apaga1], 425
 		mov word[apaga2], 525
-		jge intermediateVolta5
 		mov	ax, 1
 		mov	word[bloco_quebrado5], ax
 		jmp	apaga_quad
 
 verifica_quad6:
+		mov ax, 630
+		cmp	[px], ax
+		jge nao_apaga
 		mov	ax, 1
 		cmp ax, [bloco_quebrado6]
 		je	intermediateSobeMais3
-		mov ax, 630
-		cmp	[px], ax
 		mov word[apaga1], 530
 		mov word[apaga2], 630
-		jge nao_apaga
 		mov	ax, 1
 		mov	word[bloco_quebrado6], ax
 		jmp	apaga_quad
