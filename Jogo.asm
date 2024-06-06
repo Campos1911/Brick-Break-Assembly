@@ -189,6 +189,9 @@ del2:
         mov cx, 0800h ; Teste modificando este valor
 
 del1:
+		mov	ax, 12
+		cmp	word[pontuacao], ax
+		je	intermediateWin
         mov bx, 615 ;Limita o campo na parte da direita
         cmp [px], bx
         jge moveesquerda
@@ -240,6 +243,9 @@ limpa_bola:
         push        ax
         call    full_circle
         ret
+
+intermediateWin
+	jmp win_mensage
 
 moveesquerda:
         call limpa_bola
@@ -505,6 +511,7 @@ intermediateNaoApaga2
 	jmp nao_apaga
 
 apaga_quad:
+		inc		word[pontuacao]
 		mov		byte[cor], preto
 		mov		ax, word[apaga1]
 		push 	ax
@@ -559,7 +566,13 @@ sai:
         int 10h
         mov ax,4c00h
         int 21h
-		
+
+ganhou:
+	    mov ah, 08h
+        int 21h
+		cmp al, 71h ;Compara a tecla com a letra 'q', fica parado aqui até apertar 'q' novamente
+		jne ganhou
+		jmp sai
 
 verificar_teclas: ;Estrutura para decidir o que será feito durante o jogo
         push bp
@@ -698,6 +711,22 @@ verfica_continua_ou_nao:
 		cmp al, 79h
 		je limpa_tudo
 		jmp	verfica_continua_ou_nao
+
+win_mensage: ;;Escreve a mensagem na tela e espera a tecla do jogador
+		mov     	cx,31			;número de caracteres
+    	mov     	bx,0
+    	mov     	dh,12			
+    	mov     	dl,12
+		mov		byte[cor],branco_intenso
+
+repete_para_escrever_win:
+		call	cursor
+    	mov     al,[bx+mens_4]
+		call	caracter
+    	inc     bx			;proximo caracter
+		inc		dl			;avanca a coluna
+    	loop    repete_para_escrever_win
+		jmp		ganhou
 
 acaba: ;Finalizando o programa
 		mov    	ah,08h
@@ -1295,12 +1324,14 @@ bloco_quebrado4	dw		0
 bloco_quebrado5	dw		0
 bloco_quebrado6	dw		0
 
-bloco_cima_quebrado1	dw		0
+bloco_cima_quebrado1	dw		0 ;Variável para testar se a bola pode bater no 'teto'
 bloco_cima_quebrado2	dw		0
 bloco_cima_quebrado3	dw		0
 bloco_cima_quebrado4	dw		0
 bloco_cima_quebrado5	dw		0
 bloco_cima_quebrado6	dw		0
+
+pontuacao				dw		0
 
 yToDelete1		dw		0
 yToDelete2		dw		0
@@ -1308,6 +1339,7 @@ yToDelete2		dw		0
 vx      		dw      5	;Velocidade que a bola anda
 vy      		dw      5
 mens_3      	db          'GAME OVER. Deseja continuar? Y ou N'
+mens_4      	db          'FIM DE JOGO. Aperte Q para sair'
 
 ;*************************************************************************
 segment stack stack
