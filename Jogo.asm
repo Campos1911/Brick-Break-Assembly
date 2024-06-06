@@ -201,12 +201,14 @@ del1:
 		mov	word[yToDelete1], 427
 		mov	word[yToDelete2], 387
         cmp [py], bx
-		jge movebaixo
+		jge intermediateMoveBaixo2
 
 sobe_mais:
 		mov	bx, 414
+		mov	word[yToDelete1], 477
+		mov	word[yToDelete2], 437
 		cmp	[py], bx
-		jge	intermediateNaoApaga
+		jge	movebaixo1
 
         mov bx, 10 ; Limita o campo na parte de baixo
         cmp [py], bx
@@ -250,12 +252,6 @@ movedireita:
         mov [vx], bx
         jmp continua
 
-intermediateNaoApaga
-	jmp	nao_apaga
-
-intermediateVerifTeclas: ;	Função intermediária para pular para outra parte do código
-	jmp verificar_teclas
-
 movecima:
         mov ax, [vy]
         neg ax
@@ -263,11 +259,27 @@ movecima:
         mov [vy], bx
         jmp continua
 
+;  PONTOS INTERMEDIÁRIOS PARA AS FUNÇÕES
+intermediateMoveBaixo2
+	jmp movebaixo2
+
+intermediateNaoApaga
+	jmp	nao_apaga
+
+intermediateVerifTeclas: ;	Função intermediária para pular para outra parte do código
+	jmp verificar_teclas
+
 intermediateSobeMais:
 	jmp	sobe_mais
 
-; NA PARTE DE DEVOLVER A BOLA PARA BAIXO, É FEITA A VERIFICAÇÃO DA COLISÃO COM UM QUADRADO
-movebaixo:
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+movebaixo1:
+		mov ax, 5 ; Quadrado 1
+		cmp [px], ax
+		jge	verifica_quad_cima1 ; Pula para verificar se acertou no limite do quadrado (todos repetem essa lógica)
+
+movebaixo2:
 		mov ax, 5 ; Quadrado 1
 		cmp [px], ax
 		jge	verifica_quad1 ; Pula para verificar se acertou no limite do quadrado (todos repetem essa lógica)
@@ -278,7 +290,7 @@ volta1:
 volta2:
 		mov ax, 215 ; Quadrado 3
 		cmp [px], ax
-		jge	verifica_quad3
+		jge	intermediateVerificaQuad3
 volta3:
 		mov ax, 320 ; Quadrado 4
 		cmp [px], ax
@@ -321,7 +333,7 @@ verifica_quad2:
 		mov ax, 1
 		mov	word[bloco_quebrado2], ax
 		jmp	apaga_quad
-nas
+
 ;	Funções intermediárias para resolver o 'short jump'
 intermediateVolta4:
 	jmp	volta4
@@ -332,6 +344,9 @@ intermediateVolta3:
 intermediateVolta5:
 	jmp	volta5
 
+intermediateVerificaQuad3:
+	jmp verifica_quad3
+
 intermediateVerificaQuad4:
 	jmp verifica_quad4
 
@@ -341,6 +356,7 @@ intermediateVerificaQuad5:
 intermediateVerificaQuad6:
 	jmp verifica_quad6
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 verifica_quad3:
 		mov ax, 315
