@@ -152,7 +152,7 @@ fazQuadrado2: ; Segunda linha de quadrados (linha inferior)
 
 delay: ; Esteja atento pois talvez seja importante salvar contexto (no caso, CX, o que NÃO foi feito aqui).
 
-continua:
+continua: ;	Função central do jogo, é nela que a bola se movimenta e são feitas as verificações
     	call limpa_bola
 
         mov bx, [vx]
@@ -190,7 +190,7 @@ del2:
 
 del1:
 		mov	ax, 12
-		cmp	word[pontuacao], ax
+		cmp	word[pontuacao], ax ; Verificação da pontuação para finalizar o game
 		je	intermediateWin
         mov bx, 615 ;Limita o campo na parte da direita
         cmp [px], bx
@@ -206,14 +206,14 @@ del1:
         cmp [py], bx
 		jge intermediateMoveBaixo2
 
-sobe_mais:
+sobe_mais: ; Sobe para quebrar a linha de cima
 		mov	bx, 414
 		mov	word[yToDelete1], 477
 		mov	word[yToDelete2], 437
 		cmp	[py], bx
 		jge	intermediateMoveBaixo2
 
-sobe_tudo:
+sobe_tudo: ; Sobe para bater a bola no teto
 		mov	bx, 450
 		cmp	[py], bx
 		jge	intermediateNaoApaga
@@ -225,7 +225,7 @@ sobe_tudo:
         mov ah, 0bh      
         int 21h
         cmp al,0
-        jne intermediateVerifTeclas
+        jne intermediateVerifTeclas ; Verifica as teclas que o usuário clicou
 		call calcular_colisao_raquete
         jmp continua
 
@@ -244,10 +244,10 @@ limpa_bola:
         call    full_circle
         ret
 
-intermediateWin
+intermediateWin ; Função intermediária para corrigir o 'short jump'
 	jmp win_mensage
 
-moveesquerda:
+moveesquerda: ; Função para rebater a bola na parede
         call limpa_bola
 		mov ax, [vx]
         neg ax
@@ -255,7 +255,7 @@ moveesquerda:
         mov [vx], bx
         jmp continua
 
-movedireita:
+movedireita: ; Função para rebater a bola na parede
 		call limpa_bola
         mov ax, [vx]
         neg ax
@@ -263,10 +263,10 @@ movedireita:
         mov [vx], bx
         jmp continua
 
-intermediateMoveBaixo2
+intermediateMoveBaixo2 ; Função intermediária para corrigir o 'short jump'
 	jmp movebaixo2
 
-movecima:
+movecima: ; Função para rebater a bola na raquete
         mov ax, [vy]
         neg ax
         mov bx, ax
@@ -275,10 +275,10 @@ movecima:
 
 ;  PONTOS INTERMEDIÁRIOS PARA AS FUNÇÕES
 
-intermediateNaoApaga
+intermediateNaoApaga:
 	jmp	nao_apaga
 
-intermediateVerifTeclas: ;	Função intermediária para pular para outra parte do código
+intermediateVerifTeclas:
 	jmp verificar_teclas
 
 intermediateSobeMais:
@@ -289,7 +289,7 @@ intermediateSobeTudo:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-movebaixo2:
+movebaixo2: ; Função para rebater a bola quando pegar no bloco ou no teto
 		mov ax, 5 ; Quadrado 1
 		cmp [px], ax
 		jge	verifica_quad1 ; Pula para verificar se acertou no limite do quadrado (todos repetem essa lógica)
@@ -320,19 +320,20 @@ intermediateVolta2
 intermediateSobeTudo4
 	jmp sobe_tudo
 
+; Verificação para saber se pegou realmente no quadrado, e ver em que posição ele está (se está quebrado ou não)
 verifica_quad1:
 		mov ax, 105
 		cmp	[px], ax
 		jg volta1 ; Se não acertou, volta para verificar o próximo quadrado
 		mov	ax, 1
 		cmp ax, [bloco_cima_quebrado1]
-		je	intermediateSobeTudo
+		je	intermediateSobeTudo ; Verifica se nessa posição, os quadrados da primeira e segunda linha foram quebrados
 		mov	ax, 477
 		cmp ax, word[yToDelete1]
 		je	cima_quebrado1
 		mov	ax, 1
 		cmp ax, word[bloco_quebrado1]
-		je	intermediateSobeMais
+		je	intermediateSobeMais ; Sobe para a segunda linha se o bloco já foi quebrado
 ignora1:
 		mov word[apaga1], 5
 		mov word[apaga2], 105
@@ -341,8 +342,8 @@ ignora1:
 		jmp	apaga_quad ; Se acertou no limite, apaga o quadrado e rebate a bola
 cima_quebrado1:
 	mov	ax, 1
-	mov	word[bloco_cima_quebrado2], ax
-	jmp	ignora1
+	mov	word[bloco_cima_quebrado1], ax ; Carrega para indicar que o segundo bloco foi quebrado 
+	jmp	ignora1 ; Volta para quebrar o quadrado
 
 intermediateSobeMais2:
 	jmp intermediateSobeMais
@@ -393,8 +394,6 @@ intermediateVolta4:
 
 intermediateVolta3:
 	jmp	volta3
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 verifica_quad3:
@@ -510,12 +509,12 @@ cima_quebrado6:
 intermediateNaoApaga2
 	jmp nao_apaga
 
-apaga_quad:
+apaga_quad: ; Função para apagar os quadrados
 		inc		word[pontuacao]
 		mov		byte[cor], preto
-		mov		ax, word[apaga1]
+		mov		ax, word[apaga1] ; Posição em x do quadrado para apagar
 		push 	ax
-		mov		ax, word[yToDelete1]
+		mov		ax, word[yToDelete1] ; Posição em y do quadrado para apagar
 		push	ax
 		mov		ax, word[apaga2]
 		push 	ax
@@ -553,21 +552,21 @@ apaga_quad:
 		push	ax
 		call	line
 
-nao_apaga:
+nao_apaga: ; Rebate a bola para não apagar
         mov ax, [vy]
         neg ax
         mov bx, ax
         mov [vy], bx
         jmp continua
 
-sai:
+sai: ; Finalizar o game
         mov ah,0 ; set video mode
         mov al,[modo_anterior] ; recupera o modo anterior
         int 10h
         mov ax,4c00h
         int 21h
 
-ganhou:
+ganhou: ; Função de ganhar o jogo
 	    mov ah, 08h
         int 21h
 		cmp al, 71h ;Compara a tecla com a letra 'q', fica parado aqui até apertar 'q' novamente
@@ -712,7 +711,7 @@ verfica_continua_ou_nao:
 		je limpa_tudo
 		jmp	verfica_continua_ou_nao
 
-win_mensage: ;;Escreve a mensagem na tela e espera a tecla do jogador
+win_mensage: ;Escreve a mensagem na tela e espera a tecla do jogador
 		mov     	cx,31			;número de caracteres
     	mov     	bx,0
     	mov     	dh,12			
