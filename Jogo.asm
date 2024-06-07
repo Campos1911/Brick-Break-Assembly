@@ -18,6 +18,21 @@ segment code
 		
 
 reset_game:
+	; Apagar a mensagem de game over
+	mov     	cx,35			;número de caracteres
+	mov     	bx,0
+	mov     	dh,10			
+	mov     	dl,10
+	mov		byte[cor],preto
+
+repete_para_apagar:
+	call	cursor
+	mov     al,[bx+mens_3]
+	call	caracter
+	inc     bx			;proximo caracter
+	inc		dl			;avanca a coluna
+	loop    repete_para_apagar
+
 ; Desenhando o campo (bordas brancas)
 		mov		byte[cor],branco_intenso
 		mov		ax, 0
@@ -737,7 +752,96 @@ acaba: ;Finalizando o programa
 		int     21h
 
 limpa_tudo: ;FUNÇÃO PARA LIMPAR O CAMPO TODO E VOLTAR PARA O ZERO
+
+	;Apagar as antigas funções (jogo passado)
+	call limpa_bola
+	call limpa_raquete
+
+	;Redefinindo os parametros do jogo
+	mov	ax, 0
+	mov	word[bloco_quebrado1], ax
+	mov	ax, 0
+	mov	word[bloco_quebrado2], ax
+	mov	ax, 0
+	mov	word[bloco_quebrado3], ax
+	mov	ax, 0
+	mov	word[bloco_quebrado4], ax
+	mov	ax, 0
+	mov	word[bloco_quebrado5], ax
+	mov	ax, 0
+	mov	word[bloco_quebrado6], ax
+	mov	ax, 0
+	mov	word[bloco_cima_quebrado1], ax
+	mov	ax, 0
+	mov	word[bloco_cima_quebrado2], ax
+	mov	ax, 0
+	mov	word[bloco_cima_quebrado3], ax
+	mov	ax, 0
+	mov	word[bloco_cima_quebrado4], ax
+	mov	ax, 0
+	mov	word[bloco_cima_quebrado5], ax
+	mov	ax, 0
+	mov	word[bloco_cima_quebrado6], ax
+	mov	ax, 0
+	mov	word[apaga1], ax
+	mov	ax, 0
+	mov	word[apaga2], ax
+	mov	ax, 0
+	mov	word[pontuacao], ax
+	mov	ax, 0
+	mov	word[yToDelete1], ax
+	mov	ax, 0
+	mov	word[yToDelete2], ax
+	mov	ax, 5
+	mov	word[x1A], ax
+	mov	ax, 105
+	mov	word[x2A], ax
+	mov	ax, 5
+	mov	word[x1B], ax
+	mov	ax, 105
+	mov	word[x2B], ax
+	mov	ax, 270
+	mov	word[player_x1], ax
+	mov	ax, 370
+	mov	word[player_x2], ax
+	mov	ax, 320
+	mov	word[px], ax
+	mov	ax, 30
+	mov	word[py], ax
+	mov	ax, 5
+	mov	word[vx], ax
+	mov	ax, 5
+	mov	word[vy], ax
+	mov al, ' '
+	mov [bx+mens_3], al
+	
 	call reset_game
+
+	call movebaixo2
+	call volta1
+	call volta2
+	call volta3
+	call volta4
+	call volta5
+	call verifica_quad1
+	call ignora1
+	call verifica_quad2
+	call ignora2
+	call verifica_quad3
+	call ignora3
+	call verifica_quad4
+	call ignora4
+	call verifica_quad5
+	call ignora5
+	call verifica_quad6
+	call ignora6
+	call apaga_quad
+
+	;Chamar as funções que desenham o jogo
+	call reset_game
+
+	;Pular para a função principal do jogo
+	call continua
 
 ;***************************************************************************
 ;
