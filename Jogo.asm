@@ -1,3 +1,5 @@
+;	Jogo feito por: Anthoni Bernardi Thomes Campos e Lara Fachetti Jeveaux
+
 segment code
 ..start:
     	mov 		ax,data
